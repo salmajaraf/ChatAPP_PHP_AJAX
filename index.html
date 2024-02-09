@@ -1,0 +1,120 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        var User = null, start = 0, url = 'http://localhost:3000/ChatApp.php';
+
+        $(document).ready(function () {
+            User = prompt("Enter votre nom s'il vous plaît");
+            load();
+
+            $('form').submit(function (e) {
+                e.preventDefault();
+
+                // Utilisation de $.ajax pour effectuer une requête HTTP POST asynchrone à l'URL spécifiée (url).
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        message: $('#message').val(),
+                        User: User
+                    },
+                    success: function (data) {
+                        // Faire quelque chose après le succès de la requête POST, si nécessaire
+                    },
+                    error: function (error) {
+                        console.log('Erreur AJAX (POST):', error);
+                    }
+                });
+
+                $('#message').val('');
+                return false;
+            });
+        });
+
+        function load() {
+            // Utilisation de $.ajax pour effectuer une requête HTTP GET asynchrone à l'URL spécifiée avec la valeur de 'start'.
+            $.ajax({
+                url: url + '?start=' + start,
+                type: 'GET',
+                success: function (result) {
+                    if (result.items) {
+                        result.items.forEach(function (item) {
+                            start = item.idMessage;
+                            $('#messages').append(renderMessage(item));
+                        });
+                        $('#messages').animate({ scrollTop: $('#messages')[0].scrollHeight });
+                    }
+                    // Appelle récursivement la fonction load(), ce qui crée une boucle infinie pour charger continuellement les messages.
+                    load();
+                },
+                error: function (error) {
+                    console.log('Erreur AJAX (GET):', error);
+                }
+            });
+        }
+
+        function renderMessage(item) {
+            var time = new Date(item.created);
+            time = `${time.getHours()}:${time.getMinutes() < 10 ? '0' : ''}${time.getMinutes()}`;
+            return `<div class="msg"><p>${item.User}</p>${item.Message}<span>${time}</span></div>`;
+        }
+    
+    </script>
+    <style>
+        body{
+            margin:0 ;
+            overflow: hidden;
+            font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+        #messages{
+            height:85vh;
+            overflow-x:hidden;
+            padding:18px;
+            background-image: url(assets/background.avif);
+        }
+        form{
+            display:flex;
+        }
+        input{
+            font-size: 1.2rem;
+            padding:10px;
+            margin:10px 5px;
+            appearance:none;
+            -webkit-appearance: none;
+            border: 1px solid #ccc;
+            border-radius:5px;
+        }
+        #message{
+            flex:2;
+        }
+        .msg {
+            background-color:#dcf8c6 ;
+            padding:5px 10px;
+            border-radius:5px;
+            margin-bottom:8px;
+            width:fit-content;
+        }
+        .msg p{
+            margin: 0;
+            font-weight: bold;
+        }
+        .msg span{
+            font-size: 0.7rem;
+            margin-left:15px;
+        }
+    </style>
+</head>
+<body>
+    <div id="messages"></div>
+    <form>
+        <input type="text" id="message" autocomplete="off" autofocus placeholder="Type message...">
+        <input type="submit" value="Envoyer">
+    </form>
+    
+</body>
+</html>
